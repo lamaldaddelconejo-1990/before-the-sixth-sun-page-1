@@ -7,24 +7,29 @@
     <style>
         body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
         
-        /* Letrero de instrucciones elegante y centrado */
+        /* Pantalla de bienvenida interactiva para activar la cámara de forma segura en celulares */
+        #start-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: #1a1a1a; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; z-index: 9999;
+            color: white; font-family: sans-serif; text-align: center; padding: 20px;
+            box-sizing: border-box;
+        }
+        #start-button {
+            padding: 16px 32px; background-color: #2196F3; color: white;
+            border: none; border-radius: 28px; font-size: 16px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.4); transition: background 0.2s;
+        }
+        #start-button:hover { background-color: #0b7dda; }
+
+        /* Letrero flotante de instrucciones */
         #scanning-overlay {
-            position: absolute; 
-            top: 50%; 
-            left: 50%; 
-            transform: translate(-50%, -50%);
-            color: white; 
-            font-family: sans-serif; 
-            font-size: 18px; 
-            font-weight: bold;
-            background: rgba(0,0,0,0.8); 
-            padding: 18px 28px; 
-            border-radius: 24px;
-            pointer-events: none; 
-            z-index: 999; 
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.2);
+            position: absolute; top: 24px; left: 50%; transform: translateX(-50%);
+            color: white; font-family: sans-serif; font-size: 15px; font-weight: bold;
+            background: rgba(0,0,0,0.8); padding: 12px 24px; border-radius: 20px;
+            pointer-events: none; z-index: 999; text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3); display: none;
+            border: 1px solid rgba(255,255,255,0.1);
         }
     </style>
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
@@ -32,12 +37,18 @@
 </head>
 <body>
 
-    <div id="scanning-overlay">Por favor, apunta con la cámara a la hoja de la exposición...</div>
+    <div id="start-overlay">
+        <h2 style="margin-bottom: 10px;">Before the Sixth Sun</h2>
+        <p style="margin-bottom: 24px; color: #aaa; max-width: 300px; font-size: 14px;">La experiencia requiere acceso a la cámara trasera para escanear el gráfico impreso.</p>
+        <button id="start-button">Iniciar Experiencia AR</button>
+    </div>
 
-    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiScanning: no;" 
+    <div id="scanning-overlay">Apunta con la cámara a la imagen de la exposición...</div>
+
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: false; uiScanning: no;" 
              embedded 
              color-space="sRGB" 
-             renderer="colorManagement: true, physicallyCorrectLights: true" 
+             renderer="colorManagement: true, physicallyCorrectLights: true, alpha: true" 
              vr-mode-ui="enabled: false" 
              device-orientation-permission-ui="enabled: false">
         
@@ -57,21 +68,30 @@
     </a-scene>
 
     <script>
-        // Envolvemos todo el script para asegurarnos de que se ejecute SOLO cuando A-Frame esté 100% listo
         document.addEventListener("DOMContentLoaded", () => {
+            const sceneEl = document.querySelector('a-scene');
+            const startOverlay = document.querySelector('#start-overlay');
+            const startButton = document.querySelector('#start-button');
+            const scanningOverlay = document.querySelector('#scanning-overlay');
             const targetAnchor = document.querySelector('#targetAnchor');
-            const overlay = document.querySelector('#scanning-overlay');
-            
-            // Verificación de seguridad para evitar errores si tarda en renderizar
-            if (targetAnchor && overlay) {
+
+            // Arrancar el visor y la cámara al hacer clic en el botón
+            startButton.addEventListener('click', () => {
+                startOverlay.style.display = 'none';
+                scanningOverlay.style.display = 'block';
+                
+                // Inicializamos los sistemas de MindAR y la cámara de video de forma segura
+                sceneEl.systems["mindar-image-system"].start(); 
+            });
+
+            // Lógica para ocultar/mostrar las instrucciones según la detección del diseño impreso
+            if (targetAnchor && scanningOverlay) {
                 targetAnchor.addEventListener("targetFound", () => {
-                    overlay.style.display = "none";
-                    console.log("¡Marcador encontrado con éxito!");
+                    scanningOverlay.style.display = "none";
                 });
                 
                 targetAnchor.addEventListener("targetLost", () => {
-                    overlay.style.display = "block";
-                    console.log("Marcador fuera de vista.");
+                    scanningOverlay.style.display = "block";
                 });
             }
         });
