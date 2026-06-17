@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Before the Sixth Sun - RA Exposición</title>
+    <style>
+        body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #000; }
+        
+        /* Letrero de instrucciones elegante y centrado */
+        #scanning-overlay {
+            position: absolute; 
+            top: 50%; 
+            left: 50%; 
+            transform: translate(-50%, -50%);
+            color: white; 
+            font-family: sans-serif; 
+            font-size: 18px; 
+            font-weight: bold;
+            background: rgba(0,0,0,0.8); 
+            padding: 18px 28px; 
+            border-radius: 24px;
+            pointer-events: none; 
+            z-index: 999; 
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+    </style>
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body>
+
+    <div id="scanning-overlay">Por favor, apunta con la cámara a la hoja de la exposición...</div>
+
+    <a-scene mindar-image="imageTargetSrc: ./targets.mind; autoStart: true; uiScanning: no;" 
+             embedded 
+             color-space="sRGB" 
+             renderer="colorManagement: true, physicallyCorrectLights: true" 
+             vr-mode-ui="enabled: false" 
+             device-orientation-permission-ui="enabled: false">
+        
+        <a-assets>
+            <a-asset-item id="artworkModel" src="./Before_the_Sixth_Sun_COMPLETO.glb"></a-asset-item>
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity id="targetAnchor" mindar-image-target="targetIndex: 0">
+            <a-gltf-model src="#artworkModel" 
+                          position="0 0 0" 
+                          rotation="0 0 0" 
+                          scale="1 1 1">
+            </a-gltf-model>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        // Envolvemos todo el script para asegurarnos de que se ejecute SOLO cuando A-Frame esté 100% listo
+        document.addEventListener("DOMContentLoaded", () => {
+            const targetAnchor = document.querySelector('#targetAnchor');
+            const overlay = document.querySelector('#scanning-overlay');
+            
+            // Verificación de seguridad para evitar errores si tarda en renderizar
+            if (targetAnchor && overlay) {
+                targetAnchor.addEventListener("targetFound", () => {
+                    overlay.style.display = "none";
+                    console.log("¡Marcador encontrado con éxito!");
+                });
+                
+                targetAnchor.addEventListener("targetLost", () => {
+                    overlay.style.display = "block";
+                    console.log("Marcador fuera de vista.");
+                });
+            }
+        });
+    </script>
+</body>
+</html>
